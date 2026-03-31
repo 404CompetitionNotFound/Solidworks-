@@ -1,1 +1,142 @@
+--------code for threads making--------
+Option Explicit
+
+' Solidworks application variable
+Dim swApp As SldWorks.SldWorks
+
+' Solidworks document variable
+Dim swDoc As SldWorks.ModelDoc2
+
+' Solidworks Thread feature data variable
+Dim swThreadFeatData As SldWorks.ThreadFeatureData
+
+' Solidworks Thread Feature variable
+Dim swThreadFeature As SldWorks.Feature
+
+' Solidworks Feature variable
+Dim swFeature As SldWorks.Feature
+
+' Solidworks Face variable
+Dim swFace As SldWorks.Face2
+
+' Solidworks Surface variable
+Dim swSurface As SldWorks.Surface
+
+' Solidworks Entity variable
+Dim swEnt As SldWorks.Entity
+
+' Variable for Solidworks Edges
+Dim swEdges As Variant
+
+' Solidworks Edge variable
+Dim swEdge As SldWorks.Edge
+
+' Array for Solidworks Faces
+Dim faceArray As Variant
+
+' Variable for Solidworks Face
+Dim eachFace As Variant
+
+' Boolean variable
+Dim boolStatus As Boolean
+
+' Main program for Thread
+Sub main()
+
+  ' Set Solidworks application variable to current application
+  Set swApp = Application.SldWorks
+  
+  ' Check if Solidworks is opened or not
+  If swApp Is Nothing Then
+    MsgBox ("Solidworks is not opened")
+    Exit Sub
+  End If
+  
+  ' Set Solidworks document variable to open document
+  Set swDoc = swApp.ActiveDoc
+  
+  ' Check if Solidworks document is opened or not
+  If swDoc Is Nothing Then
+    MsgBox ("Solidworks document is not opened. Please open a document.")
+    Exit Sub
+  End If
+  
+  ' Get First feature in Feature tree
+  Set swFeature = swDoc.FirstFeature
+  
+  ' Check if Solidworks document is selected or not
+  If swFeature Is Nothing Then
+    MsgBox ("Failed to selected First feature in Feature Tree.")
+    Exit Sub
+  End If
+  
+  ' Traversing through the Feature Tree,
+  ' until Feature name is "Cylinder"
+  While swFeature.Name <> "Cylinder"
+    
+    ' Print current Feature name is Immediate window
+    Debug.Print swFeature.Name
+    
+    ' Get the next feature
+    Set swFeature = swFeature.GetNextFeature
+  Wend
+  
+  ' Print current Feature name is Immediate window
+  Debug.Print swFeature.Name
+  
+  ' Get the faces of selected feature
+  faceArray = swFeature.GetFaces
+
+  ' Loop through all Face array
+  For Each eachFace In faceArray
+  
+    ' Set Solidworks Face variable to current current
+    Set swFace = eachFace
+    
+    ' Get the Surface of from the Solidworks Face variable
+    Set swSurface = swFace.GetSurface
+    
+    ' If we have cylinder surface
+    If swSurface.IsCylinder() Then
+    
+      ' Get all edges of this face
+      swEdges = swFace.GetEdges
+      
+      ' Set Solidworks edge variable to 1st edge
+      Set swEdge = swEdges(0)
+      
+      ' Set Solidworks Entity variable to Solidworks Edge variable
+      Set swEnt = swEdge
+      
+      ' Select the current entity
+      boolStatus = swEnt.Select(True)
+      
+      ' If fail to select the edge then inform user
+      If boolStatus = False Then
+        MsgBox "Failed to select Edge of Cylinder."
+        Exit Sub
+      End If
+      
+    End If
+  Next
+  
+  ' Create Thread feature data
+  Set swThreadFeatData = swDoc.FeatureManager.CreateDefinition(swFeatureNameID_e.swFmSweepThread)
+  
+  ' Create Thread Feature
+  Set swThreadFeature = swDoc.FeatureManager.CreateFeature(swThreadFeatData)
+  
+  ' Check if Thread Feature created or not
+  If swThreadFeature Is Nothing Then
+    MsgBox ("Failed to create Thread Feature.")
+    Exit Sub
+  End If
+  
+  ' View zoom to fit
+  swDoc.ViewZoomtofit2
+  
+  ' Clear all selection
+  swDoc.ClearSelection2 True
+    
+End Sub
 
